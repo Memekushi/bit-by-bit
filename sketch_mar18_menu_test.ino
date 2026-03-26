@@ -2,6 +2,7 @@
 TFT_eSPI tft = TFT_eSPI();
 
 #define TFT_BL 21
+#define BUTTON_PIN 4
 
 const int SCREEN_W = 320;
 const int SCREEN_H = 240;
@@ -10,7 +11,6 @@ const int SCREEN_H = 240;
 const int CARD_X = 10;
 const int CARD_W = 300;
 const int CARD_H = 38;
-const int CARD_GAP = 10;
 
 const int ICON_X_OFFSET = 16;
 const int LABEL_X_OFFSET = 42;
@@ -21,8 +21,8 @@ const int CHECKBOX_X = 276;
 // Progress bar
 const int TITLE_Y = 8;
 const int BAR_X = 95;
-const int BAR_Y = 12;
-const int BAR_W = 170;
+const int BAR_Y = 14;
+const int BAR_W = 145;
 const int BAR_H = 10;
 const int BAR_GAP = 8;
 
@@ -41,13 +41,9 @@ HabitBox habits[4] = {
   {CARD_X, 184, CARD_W, CARD_H, "Do Homework"}
 };
 
-// Change these to control completion state
-bool checked[4] = {
-  true,   // Drink Water
-  false,  // Read 10 Min
-  false,  // Work Out
-  false   // Do Homework
-};
+bool checked[4] = {false, false, false, false};
+
+bool lastButtonState = LOW;
 
 void drawWaterDropIcon(int x, int y) {
   tft.fillCircle(x, y + 3, 6, TFT_BLUE);
@@ -64,11 +60,11 @@ void drawBookIcon(int x, int y) {
 }
 
 void drawDumbbellIcon(int x, int y) {
-  tft.fillRect(x - 8, y - 2, 16, 4, TFT_BLUE);   // bar
-  tft.fillRect(x - 12, y - 6, 3, 12, TFT_BLUE);  // left outer
-  tft.fillRect(x - 8,  y - 5, 2, 10, TFT_BLUE);  // left inner
-  tft.fillRect(x + 9,  y - 6, 3, 12, TFT_BLUE);  // right outer
-  tft.fillRect(x + 6,  y - 5, 2, 10, TFT_BLUE);  // right inner
+  tft.fillRect(x - 8, y - 2, 16, 4, TFT_BLUE);
+  tft.fillRect(x - 12, y - 6, 3, 12, TFT_BLUE);
+  tft.fillRect(x - 8,  y - 5, 2, 10, TFT_BLUE);
+  tft.fillRect(x + 9,  y - 6, 3, 12, TFT_BLUE);
+  tft.fillRect(x + 6,  y - 5, 2, 10, TFT_BLUE);
 }
 
 void drawPencilIcon(int x, int y) {
@@ -78,6 +74,7 @@ void drawPencilIcon(int x, int y) {
 }
 
 void drawCheckbox(int x, int y, int size, bool isChecked) {
+  tft.fillRect(x, y, size, size, TFT_WHITE);
   tft.drawRect(x, y, size, size, TFT_BLACK);
 
   if (isChecked) {
@@ -103,16 +100,10 @@ void drawProgressBar(int completed, int total) {
     tft.fillRoundRect(innerX, innerY, fillW, innerH, 4, TFT_BLUE);
   }
 
-  // ---- Fraction text ----
   String fraction = String(completed) + "/" + String(total);
-
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.setTextDatum(ML_DATUM);
-
-  int textX = BAR_X + BAR_W + BAR_GAP;
-  int textY = BAR_Y + BAR_H / 2;
-
-  tft.drawString(fraction, textX, textY, 2);
+  tft.drawString(fraction, BAR_X + BAR_W + BAR_GAP, BAR_Y + BAR_H / 2, 2);
 }
 
 void drawHabitBox(HabitBox h, int index, bool isChecked) {
@@ -145,22 +136,22 @@ void drawUI() {
 
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.setTextDatum(TL_DATUM);
-
-  // Larger title
   tft.drawString("Habits", 10, TITLE_Y, 4);
 
-  // Progress bar
   drawProgressBar(completed, 4);
 
-  // Habit list
   for (int i = 0; i < 4; i++) {
     drawHabitBox(habits[i], i, checked[i]);
   }
 }
 
 void setup() {
+  Serial.begin(115200);
+
   pinMode(TFT_BL, OUTPUT);
   digitalWrite(TFT_BL, HIGH);
+
+  pinMode(BUTTON_PIN, INPUT);   // same mode as your working button test
 
   tft.init();
   tft.setRotation(1);
@@ -168,4 +159,15 @@ void setup() {
 }
 
 void loop() {
+  bool currentButtonState = digitalRead(BUTTON_PIN);
+
+  if (currentButtonState == HIGH && lastButtonState == LOW) {
+    checked[0] = !checked[0];
+    Serial.print("Drink Water toggled to: ");
+    Serial.println(checked[0] ? "CHECKED" : "UNCHECKED");
+    drawUI();
+    delay(200);
+  }
+
+  lastButtonState = currentButtonState;
 }
