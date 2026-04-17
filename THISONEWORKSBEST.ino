@@ -898,27 +898,42 @@ void initStaticSecondScreen() {
 
   tft2.begin();
   tft2.setRotation(1);
-  tft2.fillScreen(ILI9341_BLACK);
 
-  // soft retro / matching theme
-  tft2.fillRoundRect(18, 40, 284, 160, 12, ILI9341_NAVY);
-  tft2.drawRoundRect(18, 40, 284, 160, 12, ILI9341_WHITE);
-  tft2.drawRoundRect(22, 44, 276, 152, 10, ILI9341_CYAN);
+  // cream retro background
+  uint16_t cream = 0xFF7A;
+  uint16_t softBlack = 0x2124;
+  uint16_t brown = 0x6A00;
+  uint16_t tape = 0xFF38;
 
-  tft2.setTextColor(ILI9341_WHITE, ILI9341_NAVY);
-  tft2.setTextSize(2);
-  tft2.setCursor(104, 68);
-  tft2.print("Welcome");
+  tft2.fillScreen(cream);
 
-  tft2.setTextColor(ILI9341_YELLOW, ILI9341_NAVY);
+  // top divider line for a simple retro card feel
+  tft2.drawFastHLine(0, 34, 320, brown);
+
+  // little tape strip accent
+  tft2.fillRect(100, 48, 120, 22, tape);
+
+  // main title
+  tft2.setTextColor(softBlack, cream);
   tft2.setTextSize(4);
-  tft2.setCursor(56, 112);
-  tft2.print("HabitFM");
 
-  tft2.setTextColor(ILI9341_WHITE, ILI9341_NAVY);
+  const char* title = "HabitFM";
+  int16_t x1, y1;
+  uint16_t w, h;
+  tft2.getTextBounds(title, 0, 0, &x1, &y1, &w, &h);
+  int titleX = (320 - w) / 2;
+  int titleY = 98;
+  tft2.setCursor(titleX, titleY);
+  tft2.print(title);
+
+  // subtitle
   tft2.setTextSize(2);
-  tft2.setCursor(72, 164);
-  tft2.print("Stay consistent");
+  const char* subtitle = "Bit by Bit";
+  tft2.getTextBounds(subtitle, 0, 0, &x1, &y1, &w, &h);
+  int subX = (320 - w) / 2;
+  int subY = 152;
+  tft2.setCursor(subX, subY);
+  tft2.print(subtitle);
 
   digitalWrite(SCREEN2_CS, HIGH);
 }
